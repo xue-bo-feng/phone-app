@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<style>
+		.area {
+			margin: 20px auto 0px auto;
+		}
+
+		.mui-input-group {
+			margin-top: 10px;
+		}
+
+		.mui-input-group:first-child {
+			margin-top: 20px;
+		}
+
+		.mui-input-group label {
+			width: 22%;
+		}
+
+		.mui-input-row label~input,
+		.mui-input-row label~select,
+		.mui-input-row label~textarea {
+			width: 78%;
+		}
+
+		.mui-checkbox input[type=checkbox],
+		.mui-radio input[type=radio] {
+			top: 6px;
+		}
+
+		.mui-content-padded {
+			margin-top: 25px;
+		}
+
+		.mui-btn {
+			padding: 10px;
+		}
+
+		.link-area {
+			display: block;
+			margin-top: 25px;
+			text-align: center;
+		}
+
+		.spliter {
+			color: #bbb;
+			padding: 0px 8px;
+		}
+
+		.oauth-area {
+			position: absolute;
+			bottom: 20px;
+			left: 0px;
+			text-align: center;
+			width: 100%;
+			padding: 0px;
+			margin: 0px;
+		}
+
+		.oauth-area .oauth-btn {
+			display: inline-block;
+			width: 50px;
+			height: 50px;
+			background-size: 30px 30px;
+			background-position: center center;
+			background-repeat: no-repeat;
+			margin: 0px 20px;
+			border: solid 1px #ddd;
+			border-radius: 25px;
+		}
+
+		.oauth-area .oauth-btn:active {
+			border: solid 1px #aaa;
+		}
+
+		.oauth-area .oauth-btn.disabled {
+			background-color: #ddd;
+		}
+
+		.mui-input-group .mui-input-row {
+			height: 60px;
+			padding-top: 10px;
+		}
+
+		.mui-input-row .mui-input-clear~.mui-icon-clear,
+		.mui-input-row .mui-input-password~.mui-icon-eye,
+		.mui-input-row .mui-input-speech~.mui-icon-speech {
+			top: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-icon mui-icon-back mui-pull-left"></a>
+		<h1 class="mui-title">登录</h1>
+	</header>
+	<div class="mui-content">
+		<form id='login-form' class="mui-input-group">
+			<div class="mui-input-row">
+				<label>账号</label>
+				<input id='user_name' type="text" value="" class="mui-input-clear mui-input" placeholder="请输入账号">
+			</div>
+			<div class="mui-input-row">
+				<label>密码</label>
+				<input id='user_password' type="password" value="" class="mui-input-clear mui-input" placeholder="请输入密码">
+			</div>
+			<div class="mui-input-row">
+					<label>验证</label>
+					<input id='captcha_value' type="text" value="" class="mui-input" placeholder="请输入验证码">
+					<div style="position:absolute;right:1px;top:7px;" tapmode onclick="thisApp.resetcaptcha();" id="captchabox"></div>
+			</div>
+		</form>
+		<div class="mui-content-padded">
+			<button id='login' onclick="thisApp.submit()" tapmode="tapmode" class="mui-btn mui-btn-block mui-btn-primary">登录</button>
+		</div>
+		<div class="mui-content-padded oauth-area"></div>
+	</div>
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+  var captcha_identifier = "";
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+		resetcaptcha:function(){
+			  captcha_identifier = Date.parse(new Date()) +""+ parseInt(Math.random()*(99999999-111111+1)+111111);
+			  $api.html($api.dom('#captchabox'),'<img style="height:45px;" src="'+ db2.getVal("remoteurl") +'index/getcaptcha?identifier='+ captcha_identifier +'" alt="">');
+		},
+		init: function() {
+			thisApp.resetcaptcha();
+		},
+		submit: function() {
+			var user_name = document.querySelector("#user_name").value;
+			var user_password = document.querySelector("#user_password").value;
+			var captcha_value = document.querySelector("#captcha_value").value;
+
+			if (!user_name) {
+			  PubApp.toast("输入用户名");
+				return false;
+			}
+			if (!user_password) {
+			  PubApp.toast("输入密码");
+				return false;
+			}
+
+			if (!captcha_value) {
+			  PubApp.toast("输入验证码");
+				return false;
+			}
+
+			api.showProgress({
+		    style: 'default',
+		    animationType: 'fade',
+		    title: '登入中...',
+		    text: '先稍等...',
+		    modal: false
+			});
+
+			var param={
+				"user_name":user_name,
+				"user_password":user_password,
+				"captcha_type" : "image",
+				"captcha_value" : captcha_value,
+				"user_pushtoken":db2.getVal("ajpushid"),
+				"captcha_identifier":captcha_identifier,
+			};
+
+			doAjax("user","login",param,"post",function(rs){
+				api.hideProgress();
+				if (rs.code === 1) {
+					db2.setVal("user_id",rs.data.user_id);
+					db2.setVal("user_token",rs.data.user_token);
+					db2.setVal("store_name",rs.data.store_name);
+					db2.setVal("user_role",rs.data.user_role);
+					db2.setVal("user_role_cn",rs.data.user_role_cn);
+					db2.setVal("user_realname",rs.data.user_realname);
+					db2.setVal("user_refund_auth",rs.data.user_refund_auth);
+					db2.setVal("h5_url",rs.data.h5_url);
+					api.sendEvent({
+							name: 'userloginorout'
+					});
+					PubApp.toast("登入成功");
+					PubApp.closeWin(100);
+				} else {
+					thisApp.resetcaptcha();
+					PubApp.toast(rs.message);
+				}
+			})
+		},
+		addEvt: function() {
+			PubApp.setCloseBtn();
+		},
+		fixdata: function(dataOne) {
+			api.hideProgress();
+			api.parseTapmode();
+		}
+	}
+</script>
+</html>

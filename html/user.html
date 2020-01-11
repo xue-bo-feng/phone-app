@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<link rel="stylesheet" href="../css/mui_picker_min.css" />
+	<style>
+		html,
+		body,
+		.mui-content {
+			height: 100%;
+		}
+
+		.userhead {
+			background: -webkit-gradient(linear, 0 0, 0 bottom, from(#53a7ec), to(#2C95FF));
+			height: 200px;
+			padding-top: 40px;
+			text-align: center;
+		}
+
+		.userhead .headimg {
+			margin: auto;
+			width: 100px;
+			height: 100px;
+			border-radius: 50%;
+			background-color: #ccc;
+		}
+
+		.userhead h3 {
+			font-weight: lighter;
+			font-size: 18px;
+			color: #fff;
+			margin-top: 10px;
+		}
+
+		.userhead h5 {
+			font-weight: lighter;
+			font-size: 12px;
+			color: #fff;
+		}
+
+		.quit {
+			position: absolute;
+			bottom: 10px;
+			left: 10px;
+			right: 10px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="mui-content">
+		<div class="userhead">
+			<div class="headimg" style="display:none;" tapmode="tapmode" onclick="thisApp.baseclick()">
+
+			</div>
+			<h3 id="text_shopname" tapmode="tapmode" onclick="thisApp.baseclick()">点击登入</h3>
+		</div>
+		<ul class="mui-table-view">
+			<li class="mui-table-view-cell" tapmode="tapmode" onclick="thisApp.updatepwd()">
+				<a class="mui-navigate-right">
+					<span class="mui-icon mui-icon-locked" style="color: #FF0000;"></span> 修改登入密码
+				</a>
+			</li>
+				<li class="mui-table-view-cell hide" tapmode="tapmode" id="updatepaypwd" onclick="thisApp.updatepaypwd()">
+					<a class="mui-navigate-right">
+						<span class="mui-icon mui-icon-locked" style="color: #FF0000;"></span> 修改退款密码
+					</a>
+				</li>
+			<li class="mui-table-view-cell" tapmode="tapmode" onclick="thisApp.contactus()">
+				<a class="mui-navigate-right">
+					<span class="mui-icon mui-icon-phone" style=""></span> 联系我们
+				</a>
+			</li>
+			<li class="mui-table-view-cell">
+				<a class="mui-navigate-right">
+					<span class="mui-icon mui-icon-info" style=""></span> 版本
+					<p id="copyrightinfo" class="mui-pull-right" style="padding-right: 1.5em; padding-top: 4px;">v 0</p>
+				</a>
+			</li>
+		</ul>
+		<div class="quit hide">
+			<button tapmode="tapmode" onclick="PubApp.doLogout()" class="mui-btn mui-btn-block mui-btn-blue">退出</button>
+		</div>
+	</div>
+
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	var thisdata = getLocalTime(Date.parse(new Date()) / 1000, "Y-m-d");
+	var picker;
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+		init: function() {
+
+			//下拉刷新
+			// api.setRefreshHeaderInfo({
+			// 	visible: true,
+			// 	loadingImg: 'widget://image/refresh.png',
+			// 	bgColor: '#fff',
+			// 	textColor: '#ccc',
+			// 	textDown: '下拉刷新...',
+			// 	textUp: '松开刷新...',
+			// 	showTime: true
+			// }, function(ret, err) {
+			// 		thisApp.requestData();
+			//
+			// });
+			//__下拉刷新
+
+			if (isLogin() == true) {
+				$api.html($api.dom('#text_shopname'), db2.getVal("user_realname")+ "<span class='mui-badge'>" + db2.getVal("user_role_cn") + "</span>" + "<h5>" + db2.getVal("store_name") + "</h5>");
+				$api.removeCls($api.dom('.quit'), 'hide');
+				if(db2.getVal("user_refund_auth")==1)
+				{
+						$api.removeCls($api.dom('#updatepaypwd'), 'hide');
+				}
+			} else {
+				$api.html($api.dom('#text_shopname'), "点击登入");
+				$api.addCls($api.dom('.quit'), 'hide');
+				$api.addCls($api.dom('#updatepaypwd'), 'hide');
+			}
+
+			$api.html($api.dom('#copyrightinfo'), "v" + api.appVersion);
+
+
+
+		},
+		updatepwd:function() {
+				if(isLogin()==true)
+				{
+					openWin('user_updatepwd');
+				}
+				else {
+					openWin('login');
+				}
+		},
+		updatepaypwd:function() {
+				if(isLogin()==true)
+				{
+					openWin('user_updatepaypwd');
+				}
+				else {
+					openWin('login');
+				}
+		},
+		requestData: function() {
+
+		},
+		contactus:function(){
+				api.showProgress({
+				    style: 'default',
+				    animationType: 'fade',
+				    title: '稍等',
+				    text: '',
+				    modal: false
+				});
+				doAjax("index", "appinfo", {}, "post", function(rs) {
+					 api.confirm({
+					     title: rs.data.site_title,
+					     msg: rs.data.telphone,
+					     buttons: ['拨打', '取消']
+					 }, function(ret, err){
+					     if( ret ){
+					          if(ret.buttonIndex==1)
+										{
+											if(rs.data.telphone)PubApp.tel(rs.data.telphone);
+										}
+					     }else{
+
+					     }
+					 });
+					 api.hideProgress();
+				});
+		},
+		addEvt: function() {
+			api.addEventListener({
+				name: 'userloginorout'
+			}, function(ret, err) {
+				if (ret) {
+
+					thisApp.init();
+				} else {
+
+				}
+			});
+
+		},
+		baseclick: function() {
+			if (isLogin() == false) {
+				openWin('login');
+			}
+		}
+	}
+</script>
+
+</html>

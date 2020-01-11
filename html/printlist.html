@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<style>
+		.area {
+			margin: 20px auto 0px auto;
+		}
+
+		.mui-input-group {
+			margin-top: 10px;
+		}
+
+		.mui-input-group:first-child {
+			margin-top: 20px;
+		}
+
+		.mui-input-group label {
+			width: 22%;
+		}
+
+		.mui-input-row label~input,
+		.mui-input-row label~select,
+		.mui-input-row label~textarea {
+			width: 78%;
+		}
+
+		.mui-checkbox input[type=checkbox],
+		.mui-radio input[type=radio] {
+			top: 6px;
+		}
+
+		.mui-content-padded {
+			margin-top: 25px;
+		}
+
+		.mui-btn {
+			padding: 10px;
+		}
+
+		.link-area {
+			display: block;
+			margin-top: 25px;
+			text-align: center;
+		}
+
+		.spliter {
+			color: #bbb;
+			padding: 0px 8px;
+		}
+
+		.oauth-area {
+			position: absolute;
+			bottom: 20px;
+			left: 0px;
+			text-align: center;
+			width: 100%;
+			padding: 0px;
+			margin: 0px;
+		}
+
+		.oauth-area .oauth-btn {
+			display: inline-block;
+			width: 50px;
+			height: 50px;
+			background-size: 30px 30px;
+			background-position: center center;
+			background-repeat: no-repeat;
+			margin: 0px 20px;
+			/*-webkit-filter: grayscale(100%); */
+			border: solid 1px #ddd;
+			border-radius: 25px;
+		}
+
+		.oauth-area .oauth-btn:active {
+			border: solid 1px #aaa;
+		}
+
+		.oauth-area .oauth-btn.disabled {
+			background-color: #ddd;
+		}
+
+		.mui-input-group .mui-input-row {
+			height: 60px;
+			padding-top: 10px;
+		}
+
+		.mui-input-row .mui-input-clear~.mui-icon-clear,
+		.mui-input-row .mui-input-password~.mui-icon-eye,
+		.mui-input-row .mui-input-speech~.mui-icon-speech {
+			top: 20px;
+		}
+		.mui-input-group label{ min-width: 25%;}
+		.mui-input-row label~input, .mui-input-row label~select, .mui-input-row label~textarea{ width: 75%;}
+	</style>
+</head>
+
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-icon mui-icon-back mui-pull-left"></a>
+		<a class="mui-icon mui-icon-refresh mui-pull-right"></a>
+		<h1 class="mui-title" onclick="thisApp.searchbuleprint()">打印机列表</h1>
+	</header>
+	<div class="mui-content">
+		<div class="mui-content-padded">
+
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+		init: function() {
+
+			//下拉刷新
+			/*api.setRefreshHeaderInfo({
+			    visible: true,
+			    loadingImg: 'widget://image/refresh.png',
+			    bgColor: '#fff',
+			    textColor: '#ccc',
+			    textDown: '下拉刷新...',
+			    textUp: '松开刷新...',
+			    showTime: true
+			}, function(ret, err) {
+			    thisApp.requestData("new");
+			});*/
+			//__下拉刷新
+
+		},
+		submit: function() {
+
+
+		},
+		searchbuleprint:function() {
+				api.showProgress({
+				    style: 'default',
+				    animationType: 'fade',
+				    title: '正在搜索打印机...',
+				    text: '稍等...',
+				    modal: true
+				});
+				setTimeout(function(){
+					api.hideProgress();
+					PubApp.toast("没有找到打印机");
+				},1000);
+		},
+		addEvt: function() {
+			PubApp.setCloseBtn();
+
+
+
+			/*
+			PubApp.setRightBtn(function() {
+			    openWin("user_car_edit");
+			});
+			*/
+		},
+		fixdata: function(dataOne) {
+
+
+
+
+			api.hideProgress();
+			api.parseTapmode();
+
+		}
+	}
+</script>
+
+</html>

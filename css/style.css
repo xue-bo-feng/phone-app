@@ -1,0 +1,42 @@
+
+/*重写mui的css*/
+*{padding: 0; margin: 0;touch-action: pan-y;}
+.mui-bar-tab .mui-tab-item.mui-active{color: #2C95FF;}
+.mui-bar-nav~.mui-content{padding-top: 66px;}
+header.mui-bar{height: 66px; padding-top: 20px; background-color: #2C95FF;}
+.mui-title{color: #fff;}
+header.mui-bar a{color: #fff;}
+header.mui-bar .icon-xinxi,header.mui-bar .icon-jia{font-size: 20px; margin-top: 2px;}
+
+
+.mui-segmented-control{border: 0;}
+.mui-segmented-control .mui-control-item{color: #000000; border:none;}
+.mui-segmented-control .mui-control-item.mui-active{background-color:#efeff4 ; color: #000; border-bottom: 2px solid #2C95FF;	}
+
+.mui-btn-blue, .mui-btn-primary, input[type=submit]{background-color: #2C95FF;border:1px solid #2C95FF;}
+.mui-btn-blue.mui-active:enabled, .mui-btn-blue:enabled:active, .mui-btn-primary.mui-active:enabled, .mui-btn-primary:enabled:active, input[type=submit].mui-active:enabled, input[type=submit]:enabled:active{background-color: #2C95FF;border:1px solid #2C95FF; opacity: 0.8;}
+/*__重写mui的css*/
+
+.hide{display: none;}
+.tapmode{opacity: 0.8;}
+
+.cashbox1{}
+.cashbox1 .cashtips{ padding: 14px; font-size: 15px; padding-bottom: 0;}
+.cashbox1 .cashnumberwarp{margin-left: 16px; margin-right: 16px; }
+.cashbox1 .cashnumberwarp input{ height: 60px; padding: 0; background-color: #efeff4; margin-bottom: 0; border: 0; font-size: 50px; line-height: 50px;border-bottom: 1px solid #C8C7CC;}
+.cashbox1 .cashcontrolwarp{padding: 5px 0 0 10px;}
+.cashbox1 .cashcontrolwarp ul{ position: relative;}
+.cashbox1 .cashcontrolwarp ul li{position: relative;display: inline-block; margin-right:1%; margin-bottom: 3px; width:22%;text-align: center; border: 1px #ccc solid;border-radius: 10px;}
+
+.cashbox1 .cashcontrolwarp ul li span.number,.cashbox1 .cashcontrolwarp ul li span.hanzhi{position: absolute; font-size: 30px;height:30px;line-height: 30px; left: 0; right: 0; bottom: 0; top: 50%;transform:translateY(-50%);-webkit-transform:translateY(-50%);}
+.cashbox1 .cashcontrolwarp ul li:after{content:"";display: block; padding-bottom: 100%; float: left; }
+.cashbox1 .cashcontrolwarp ul li span.hanzhi{ font-size: 26px; color: #2C95FF;}
+.cashbox1 .cashcontrolwarp ul .scan{position: absolute; background-color: #2C95FF;border-radius: 10px; color: #fff; text-align: center; padding-top: 60%; left: 0; top: 0; right: 0; bottom: -111%;}
+.cashbox1 .cashcontrolwarp ul .scan .icon-saoyisao{margin-bottom: 10px;}
+.cashbox1 .cashcontrolwarp .kongbai{border: none;}
+
+.qrcodewarp{ padding-top: 20px;}
+.qrcodewarp h1{ text-align: center; font-size: 22px; font-weight: lighter;}
+.qrcodewarp .qrcodebox{ text-align: center; margin-top: 20px;}
+.qrcodewarp .qrcodebox img{ background-color: #C0C0C0; width: 250px; height: 250px;}
+.qrcodewarp .tips{ text-align: center; padding-top: 30px; font-size: 16px;color: #333333;}

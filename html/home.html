@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<style>
+		html,
+		body {
+			height: 100%;
+			overflow-y: hidden;
+		}
+		#input_cashnumber{text-align:right;}
+	</style>
+</head>
+
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-pull-right" style="font-size:16px; padding-top:13px;" onclick="thisApp.checkorder();">查单</a>
+		<h1 class="mui-title">未登录</h1>
+	</header>
+	<div class="mui-content">
+		<div class="mui-segmented-control">
+			<a id="tabs_1" class="mui-control-item mui-active" href="#item1">普通收款</a>
+			<a id="tabs_2" class="mui-control-item" href="#item2">收款码</a>
+		</div>
+		<div class="cashbox1 item1">
+			<div class="cashtips">消费总金额</div>
+			<div class="cashnumberwarp" style="overflow:hidden;">
+				<input type="text" readonly="readonly" id="input_cashnumber" value="" placeholder="0.00" />
+			</div>
+			<div class="cashcontrolwarp">
+				<ul>
+					<li class="btn_num" value="1" tapmode="tapmode">
+						<span class="number">1</span>
+					</li>
+					<li class="btn_num" value="2" tapmode="tapmode">
+						<span class="number">2</span>
+					</li>
+					<li class="btn_num" value="3" tapmode="tapmode">
+						<span class="number">3</span>
+					</li>
+					<li class="btn_num" value="del" tapmode="tapmode">
+						<span class="hanzhi">删除</span>
+					</li>
+					<li class="btn_num" value="4" tapmode="tapmode">
+						<span class="number">4</span>
+					</li>
+					<li class="btn_num" value="5" tapmode="tapmode">
+						<span class="number">5</span>
+					</li>
+					<li class="btn_num" value="6" tapmode="tapmode">
+						<span class="number">6</span>
+					</li>
+					<li class="btn_num" value="clear" tapmode="tapmode">
+						<span class="hanzhi">清空</span>
+					</li>
+					<li class="btn_num" value="7" tapmode="tapmode">
+						<span class="number">7</span>
+					</li>
+					<li class="btn_num" value="8" tapmode="tapmode">
+						<span class="number">8</span>
+					</li>
+					<li class="btn_num" value="9" tapmode="tapmode">
+						<span class="number">9</span>
+					</li>
+					<li class="">
+						<div class="scan btn_num" value="scan" tapmode="tapmode">
+							<div><span class="mui-icon iconfont icon-saoyisao"></span></div>
+							收钱</div>
+					</li>
+					<li class="btn_num" value="00" tapmode="tapmode">
+						<span class="number">00</span>
+					</li>
+					<li class="btn_num" value="0" tapmode="tapmode">
+						<span class="number">0</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="item2 hide" style="background-color:#fff; padding-bottom:200px;">
+			<div class="qrcodewarp">
+				<h1 style="display:none;">未登入</h1>
+				<div class="qrcodebox">
+					<img src="" alt="" />
+				</div>
+				<div id="box_qr_tips" class="tips hide">
+					请使用支付宝/微信扫描支付
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" src="../script/soundmanager2_jsmin.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	var orderoldnumlist = "";
+	window.soundPlayList = [];
+	window.soundPlayIng = 0;
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+		init: function() {
+			thisApp.fixdata();
+			api.parseTapmode();
+			soundManager.setup({
+				debugMode: true,
+			});
+		},
+		sound: {
+			paynotice: function(channel, cash, order_num) {
+				if (channel.indexOf("_alipay") > 0) {
+					thisApp.sound.getsoundfile("支付宝收钱" + cash + "元");
+				}
+				if (channel.indexOf("_wxpay") > 0) {
+					thisApp.sound.getsoundfile("微信收钱" + cash + "元");
+				}
+			},
+			getsoundfile: function(cash_num) {
+				var param = {
+					user_id: db2.getVal("user_id"),
+					cash_num: cash_num,
+				};
+				doAjax("pay", "getsoundfile", param, "post", function(rs) {
+					log(JSON.stringify(rs));
+					soundPlayList.push( (db2.getVal("remoteurl")).replace("/api","") + rs.data.filepath);
+					thisApp.sound.play();
+				});
+			},
+			play: function() {
+				if (window.soundPlayIng == 1) return;
+				if (soundPlayList.length > 0) {
+					window.soundPlayIng = 1;
+					soundManager.createSound({
+						url: soundPlayList.shift(),
+						onfinish: function() {
+							window.soundPlayIng = 0;
+							thisApp.sound.play();
+						}
+					}).play();
+				}
+			}
+		},
+		fixdata: function() {
+			if (isLogin() == true) {
+				$api.html($api.dom('.mui-title'), db2.getVal("store_name"));
+				$api.html($api.dom('.qrcodewarp h1'), db2.getVal("store_name"));
+				$api.removeCls($api.dom('#box_qr_tips'), 'hide');
+				$api.attr($api.dom('.qrcodebox img'), "src", db2.getVal("remoteurl") +'index/qrcode?value=' + encodeURIComponent(db2.getVal("h5_url")));
+			} else {
+				$api.html($api.dom('.mui-title'), '未登入');
+				$api.attr($api.dom('.qrcodebox img'), "src", "");
+				$api.addCls($api.dom('#box_qr_tips'), 'hide');
+			}
+		},
+		addEvt: function() {
+			api.addEventListener({
+				name: 'orderchange'
+			}, function(ret, err) {
+				if (ret) {
+					if (isLogin()==true) {
+						thisApp.orderchange(ret.value);
+					}
+				} else {
+						console.log(JSON.stringify(err));
+				}
+			});
+
+			$api.addEvt($api.dom('#tabs_2'), 'tap', function() {
+				$api.addCls($api.dom('.item1'), 'hide');
+				$api.removeCls($api.dom('.item2'), 'hide');
+			});
+
+			$api.addEvt($api.dom('#tabs_1'), 'tap', function() {
+
+				$api.removeCls($api.dom('.item1'), 'hide');
+				$api.addCls($api.dom('.item2'), 'hide');
+			});
+
+
+			api.addEventListener({
+				name: 'userloginorout'
+			}, function(ret, err) {
+				if (ret) {
+					thisApp.fixdata();
+					if (isLogin() == true) {
+						//重新监听推送
+					} else {
+						//断开推送监听
+					}
+				} else {
+
+				}
+			});
+
+			mui(".cashcontrolwarp").on("tap", ".btn_num", function() {
+				var oldval = $api.val($api.dom('#input_cashnumber'));
+				var newbuttonval = this.getAttribute("value").toString();
+
+				switch (newbuttonval) {
+					case "0":
+					case "1":
+					case "2":
+					case "3":
+					case "4":
+					case "5":
+					case "6":
+					case "7":
+					case "8":
+					case "9":
+					case "00":
+						var newval = accMul((oldval||0),100) + '' + newbuttonval;
+
+						if(newval)newval = accDiv(newval,100);
+
+						if (newval>1000000) {
+							PubApp.toast("金额过大");
+							return false;
+						}
+
+						$api.val($api.dom('#input_cashnumber'), returnFloat(newval));
+
+						break;
+					case "del":
+						if (oldval) {
+							$api.val($api.dom('#input_cashnumber'), oldval.replace(/([\d\.]{1}$)/g, ''));
+						}
+						break;
+					case "clear":
+						$api.val($api.dom('#input_cashnumber'), "");
+						break;
+					case "scan":
+						if (isLogin() == true) {
+							thisApp.doscan();
+						} else {
+							openWin("login");
+						}
+
+						break;
+					default:
+						break;
+				}
+			})
+
+		},
+		orderchange: function(rs) {
+
+			var order_num_mark = "," + rs.data.order_num + "" + rs.data.trade_status;
+			if (orderoldnumlist.indexOf(order_num_mark) >= 0) {
+				return;
+			}
+			orderoldnumlist += order_num_mark;
+			log("orderoldnumlist==========" + orderoldnumlist);
+			api.sendEvent({
+				name: 'neworder',
+				extra: {
+					key1: 'value1',
+					key2: 'value2'
+				}
+			});
+			switch (rs.data.trade_status) {
+				case 100: //成功
+					api.hideProgress();
+					api.alert({
+						title: '成功收款',
+						msg: rs.data.total_amount + "元",
+					}, function(ret, err) {
+						if (ret) {
+							log("ret==========" + JSON.stringify(ret));
+						} else {
+							log("ret==========" + JSON.stringify(ret));
+						}
+					});
+					break;
+				case 600: //等待用户输入支付密码
+				case 500: //未知异常，调用查询接口确认支付结果
+					api.hideProgress();
+					api.toast({
+						msg: '等待用户付款，稍后在订单中心查看结果',
+						duration: 5000,
+						location: 'middle'
+					});
+					break;
+				case 400: //未知异常,调用查询接口确认支付结果
+				api.hideProgress();
+					api.toast({
+						msg: rs.message || "支付关闭",
+						duration: 4000,
+						location: 'middle'
+					});
+					break;
+			}
+		},
+		doscan: function() {
+			var cash = $api.val($api.dom('#input_cashnumber'));
+			if (Number(cash) <= 0) {
+				PubApp.toast("金额不对");
+				return false;
+			}
+			PubApp.doScanQrcode(function(getqrcode) {
+				thisApp.dopay(getqrcode, cash);
+			});
+		},
+		//条形码_收单
+		dopay: function(auth_code, cash) {
+
+			api.showProgress({
+				style: 'default',
+				animationType: 'fade',
+				title: '支付中...',
+				text: '请稍等...',
+				modal: false
+			});
+
+			var param = {
+				user_id: db2.getVal("user_id"),
+				auth_code: auth_code,
+				total_amount: cash,
+				create_where: "payapp"
+			};
+
+			doAjax("pay", "barpay", param, "post", function(rs) {
+				if (rs.code == 1) {
+					thisApp.orderchange(rs);
+				} else {
+					api.hideProgress();
+					PubApp.toast(rs.message);
+				}
+			})
+		},
+
+		checkorder: function() {
+
+			if (isLogin() == false) {
+				 openWin("login");
+				 return;
+			}
+
+			api.actionSheet({
+				cancelTitle: '取消',
+				buttons: ['扫码条形码/二维码', '手动输入订单号']
+			}, function(ret, err) {
+				if (ret) {
+					if (ret.buttonIndex == 1) {
+						PubApp.doScanQrcode(function(order_num) {
+							openWin("orderdetail", "order_num=" + order_num);
+						});
+					}
+					if (ret.buttonIndex == 2) {
+						api.prompt({
+							title: "输入ZZ开头的订单号",
+							type: "text",
+							buttons: ['确定', '取消']
+						}, function(ret, err) {
+							if (ret) {
+								if (ret.buttonIndex == 1) {
+									openWin("orderdetail", "order_num=" + ret.text);
+								}
+							} else {
+									log("orderdetail==========" + JSON.stringify(ret));
+							}
+						});
+					}
+				} else {
+					log("orderdetail==========" + JSON.stringify(err));
+				}
+			});
+		}
+	}
+	function returnFloat(value){
+		 if(value=="")return "0.00";
+		 var xsd=value.toString().split(".");
+		 if(xsd.length==1){
+		 		value=value.toString()+".00";
+		 return value;
+		 }
+		 if(xsd.length>1){
+		 if(xsd[1].length<2){
+		  value=value.toString()+"0";
+		 }
+		 return value;
+		 }
+	}
+</script>
+</html>

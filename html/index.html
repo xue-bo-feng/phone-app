@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+	<nav class="mui-bar mui-bar-tab">
+		<a class="mui-tab-item mui-active">
+			<span class="mui-icon mui-icon-home" style=" font-size:28px; margin-right:4px;"></span>
+			<span class="mui-tab-label">首页</span>
+		</a>
+		<a class="mui-tab-item">
+			<span class="mui-icon iconfont icon-shujubao"></span>
+			<span class="mui-tab-label">数据</span>
+		</a>
+		<a class="mui-tab-item">
+			<span class="mui-icon iconfont icon-dingdan"></span>
+			<span class="mui-tab-label">订单</span>
+		</a>
+		<a class="mui-tab-item">
+			<span class="mui-icon iconfont icon-yuangong" style=" font-size:26px; margin-right:4px;"></span>
+			<span class="mui-tab-label">我的</span>
+		</a>
+	</nav>
+</body>
+<script src="../script/mui_min.js" charset="utf-8"></script>
+<script src="../script/db.js" charset="utf-8"></script>
+<script src="../script/ajpush.js" charset="utf-8"></script>
+<script type="text/javascript" charset="UTF-8">
+
+	apiready = function() {
+		appinit();
+		thisApp.init();
+		ajpush.run();
+	}
+
+	var thisApp = {
+		init: function() {
+			thisApp.floatUibtn();
+			thisApp.openGroupPage();
+			thisApp.addEvt();
+		},
+		updateLatlon: function() {
+			if (!map) map = api.require('bMap');
+			map.getLocation({
+				accuracy: '100m',
+				autoStop: true,
+				filter: 1
+			}, function(ret, err) {
+				log("定位完成=>" + JSON.stringify(ret));
+				if (ret.status) {
+					api.ajax({
+						url: 'http://api.map.baidu.com/geocoder/v2/?location=' + ret.lat + ',' + ret.lon + '&output=json&pois=1&ak=QS4FplGXD9kwyPOG8GqfkqapoCpiDpBm',
+						method: 'get',
+						timeout: 30,
+						dataType: 'json',
+						returnAll: false,
+						data: {
+							values: {
+								valueName: 'value'
+							},
+							files: {
+								fileName: 'filePath'
+							}
+						}
+					}, function(ret, err) {
+						if (ret) {
+							if (ret.status == 0) {
+								thisApp.cityChange(ret.result.addressComponent.city);
+								api.sendEvent({
+									name: 'getGeocoderAfter'
+								});
+							}
+						} else {
+							alert(JSON.stringify(err));
+						}
+					});
+					db2.setVal("location_lon", ret.lon);
+					db2.setVal("location_lat", ret.lat);
+				}
+			});
+		},
+		
+		floatUibtn: function() {
+			var button = api.require('UIButton');
+			var buttonHeight = $api.dom('.mui-bar-tab').offsetHeight;
+			var buttonCount = 4;
+			for (var i = 0; i < buttonCount; i++) {
+				button.open({
+					rect: {
+						x: api.winWidth / buttonCount * i,
+						y: api.winHeight - buttonHeight,
+						w: api.winWidth / buttonCount - 1,
+						h: buttonHeight
+					},
+					corner: 0,
+					bg: {
+						normal: 'rgba(0,0,0,0)',
+						highlight: 'rgba(0,0,0,0)',
+						active: 'rgba(0,0,0,0)'
+					},
+					title: {
+						size: 14,
+						highlight: '',
+						active: '',
+						normal: '',
+						highlightColor: 'rgba(0,0,0,0)',
+						activeColor: 'rgba(0,0,0,0)',
+						normalColor: 'rgba(0,0,0,0)',
+						alignment: 'center'
+					},
+					fixed: false,
+					move: false
+				}, function(ret, err) {
+					if (ret.eventType == "click") {
+						var btnlist = $api.domAll('.mui-tab-item');
+						thisApp.randomSwitchBtn(btnlist[ret.id]);
+					}
+				});
+			}
+		},
+
+		openGroupPage: function() {
+			window.headmenuHeight = 0;
+			api.openFrameGroup({
+				name: 'main',
+				rect: {
+					x: 0,
+					y: window.headmenuHeight,
+					w: 'auto',
+					h: api.winHeight - $api.dom('.mui-bar-tab').offsetHeight - window.headmenuHeight,
+				},
+				scrollEnabled: false,
+				frames: [{
+					name: 'home',
+					url: 'home.html',
+					vScrollBarEnabled: false,
+					hScrollBarEnabled: false,
+					bounces: false,
+					pageParam: {
+						name: 'value'
+					}
+				}, {
+					name: 'report',
+					url: 'report.html',
+					vScrollBarEnabled: false,
+					hScrollBarEnabled: false,
+					bounces: false
+				}, {
+					name: 'orderlist',
+					url: 'orderlist.html',
+					vScrollBarEnabled: false,
+					hScrollBarEnabled: false,
+					bounces: false
+				}, {
+					name: 'user',
+					url: 'user.html',
+					vScrollBarEnabled: false,
+					bounces: false,
+					hScrollBarEnabled: false,
+					pageParam: {
+						name: 'value'
+					}
+				}],
+				index: 0,
+				preload: 0
+			}, function(ret, err) {
+				console.log("ret==========" + JSON.stringify(ret));
+			});
+		},
+
+		randomSwitchBtn: function(tag) {
+			if (tag == $api.dom('.mui-tab-item .mui-active')) return;
+			var eFootLis = $api.domAll('.mui-tab-item'),index = 0;
+			for (var i = 0, len = eFootLis.length; i < len; i++) {
+				if (tag == eFootLis[i]) {
+					index = i;
+				} else {
+					$api.removeCls(eFootLis[i], 'mui-active');
+				}
+			}
+			$api.addCls(eFootLis[index], 'mui-active');
+
+			api.setFrameGroupIndex({
+				name: 'main',
+				index: index,
+				scroll: false,
+			});
+		},
+
+		addEvt: function() {
+
+			api.addEventListener({
+				name: 'keyback'
+			}, function(ret, err) {
+				api.toLauncher();
+			});
+
+			api.addEventListener({
+			    name: 'go2orderlistpage'
+			}, function(ret, err){
+			    if( ret ){
+							 thisApp.randomSwitchBtn(document.querySelectorAll(".mui-tab-item")[2]);
+			    }else{
+							console.log("ret==========" + JSON.stringify(ret));
+			    }
+			});
+		}
+	}
+</script>
+</html>

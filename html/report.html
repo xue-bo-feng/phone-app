@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<link rel="stylesheet" href="../css/mui_picker_min.css" />
+	<style>
+		html,
+		body,
+		.mui-content {
+			background-color: #fff;
+			border-bottom: none;
+			height: 100%;
+		}
+
+		.reportwarp {
+			padding: 7px;
+			height: 100%;
+		}
+
+		.reporthead .title2 {
+			font-size: 18px;
+		}
+
+		.reporthead .title2 b {
+			font-weight: lighter;
+			color: #ccc;
+		}
+
+		.reportdesc {
+			margin-top: 15px;
+			background-color: #f5f5f5;
+			padding: 30px 20px;
+			border-radius: 10px;
+			text-align: center;
+			font-size: 14px;
+		}
+
+		.reportdesc .box1 {
+			float: left;
+		}
+
+		.reportdesc .box3 {
+			float: right;
+		}
+
+		.reportdesc .box2 {
+			border-left: 1px solid #ccc;
+			border-right: 1px solid #ccc;
+			margin-left: 33%;
+			margin-right: 33%;
+		}
+
+		.reportdesc .bz {
+			display: block;
+			font-size: 12px;
+		}
+
+		.reportdesc .num {
+			color: #f00;
+			font-size: 18px;
+			padding-right: 5px;
+		}
+
+		.reporttongji h1 {
+			border-left: 2px solid #f00;
+			font-size: 16px;
+			font-weight: lighter;
+			padding-left: 5px;
+			margin: 10px 0;
+		}
+
+		.reporttongjiitemwarp {
+			padding: 30px 20px;
+			border-radius: 10px;
+			border: 1px solid #ccc;
+		}
+
+		.reporttongjiitemwarp .item {
+			display: inline-block;
+			width: 49%;
+			text-align: center;
+		}
+
+		.reporttongjiitemwarp .item h4 {
+			font-weight: lighter;
+		}
+
+		.reporttongjiitemwarp img {
+			width: 50px;
+		}
+		.dsy{ font-size: 12px; color: #222;}
+	</style>
+</head>
+
+<body>
+	<header class="mui-bar mui-bar-nav">
+
+		<h1 class="mui-title">订单统计</h1>
+	</header>
+	<div class="mui-content">
+		<div class="reportwarp">
+
+			<div class="mui-row">
+				<div class="mui-col-sm-6">
+					<span>日期</span>：
+					<a tapmode="" style="font-size:16px;" onclick="thisApp.changedata('fromdata');" id="fromdata"></a>&nbsp;&nbsp;-&nbsp;&nbsp;
+				</div>
+				<div class="mui-col-sm-6">
+					<a tapmode="" style="font-size:16px;" onclick="thisApp.changedata('enddata');" id="enddata"></a>
+				</div>
+			</div>
+
+			<div class="reportdesc">
+				<div class="box1"  tapmode  onclick="thisApp.go2orderlistpage({status:'ordertrue'})">
+					<span class="num" id="total_amount">0</span><span class="dw">元</span>
+					<span class="bz">实收金额</span>
+				</div>
+
+				<div class="box3" tapmode  onclick="thisApp.go2orderlistpage({status:'fundorder'})">
+					<span class="num" id="total_refund_amount">0</span><span class="dw">元</span>
+					<span class="bz">退款金额</span>
+				</div>
+
+				<div class="box2" tapmode  onclick="thisApp.go2orderlistpage({})">
+					<span class="num" id="all_count">0</span><span class="dw">笔</span>
+					<span class="bz">订单笔数</span>
+				</div>
+			</div>
+
+			<div class="reporttongji">
+				<h1>支付方式统计</h1>
+				<div class="reporttongjiitemwarp">
+					<div class="item" tapmode  onclick="thisApp.go2orderlistpage({channel:'alipay'})">
+						<img src="../images/zfb.jpg" alt="">
+						<h4 id="zfb_count">0笔</h4>
+					</div>
+					<div class="item" tapmode  onclick="thisApp.go2orderlistpage({channel:'wxpay'})">
+						<img src="../images/wx.jpg" alt="">
+						<h4 id="wx_count">0笔</h4>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" src="../script/mui_picker_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	var fromdata = getLocalTime(Date.parse(new Date()) / 1000, "Y-m-d");
+	var enddata = getLocalTime(Date.parse(new Date()) / 1000, "Y-m-d");
+	var picker;
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+		picker = new mui.DtPicker({
+			"type": "date"
+		});
+	}
+	var thisApp = {
+		init: function() {
+
+			// thisApp.requestData("history");
+			// setTimeout(function() {
+			//     thisApp.requestData("new");
+			//     //api.refreshHeaderLoading();
+			// }, 350);
+
+
+
+			//下拉刷新
+			api.setRefreshHeaderInfo({
+				visible: true,
+				loadingImg: 'widget://image/refresh.png',
+				bgColor: '#fff',
+				textColor: '#ccc',
+				textDown: '下拉刷新...',
+				textUp: '松开刷新...',
+				showTime: true
+			}, function(ret, err) {
+				thisApp.requestData();
+
+			});
+			//__下拉刷新
+			thisApp.requestData();
+
+		},
+		//页面转向
+		go2orderlistpage:function(jsobj){
+				var channel = jsobj.channel || "";
+				var status = jsobj.status || "ordertrue";
+
+				var extra={
+						channel:channel,
+						order_addtime_from: fromdata,
+						order_addtime_end: enddata,
+						status:status
+				};
+				api.sendEvent({
+				    name: 'go2orderlistpage',
+				    extra: extra
+				});
+
+		},
+		changedata: function(labels) {
+
+			api.setFrameAttr({
+				name: api.frameName,
+				bounces: false
+			});
+
+
+			picker.show(function(rs) {
+				/*
+				 * rs.value 拼合后的 value
+				 * rs.text 拼合后的 text
+				 * rs.y 年，可以通过 rs.y.vaue 和 rs.y.text 获取值和文本
+				 * rs.m 月，用法同年
+				 * rs.d 日，用法同年
+				 * rs.h 时，用法同年
+				 * rs.i 分（minutes 的第二个字母），用法同年
+				 */
+				if (labels == "fromdata") {
+					fromdata = rs.text;
+				} else {
+					enddata = rs.text;
+				}
+
+				thisApp.requestData();
+				api.setFrameAttr({
+					name: api.frameName,
+					bounces: true
+				});
+				//alert(rs.text);
+				/*
+				 * 返回 false 可以阻止选择框的关闭
+				 * return false;
+				 */
+				/*
+				 * 释放组件资源，释放后将将不能再操作组件
+				 * 通常情况下，不需要示放组件，new DtPicker(options) 后，可以一直使用。
+				 * 当前示例，因为内容较多，如不进行资原释放，在某些设备上会较慢。
+				 * 所以每次用完便立即调用 dispose 进行释放，下次用时再创建新实例。
+				 */
+				//picker.dispose();
+			});
+		},
+		requestData: function() {
+			$api.html($api.dom('#fromdata'), fromdata);
+			$api.html($api.dom('#enddata'), enddata);
+
+			if (isLogin() == false) {
+				$api.html($api.dom('#zfb_count'), "0笔");
+				$api.html($api.dom('#wx_count'), "0笔");
+
+				$api.html($api.dom('#total_amount'), 0);
+				$api.html($api.dom('#total_refund_amount'), 0);
+
+				$api.html($api.dom('#all_count'), 0);
+
+				//PubApp.toast('未登入');
+				api.refreshHeaderLoadDone();
+
+				return;
+			}
+
+
+
+			var param = {
+				user_id: db2.getVal("user_id"),
+				store_id: "",
+				order_addtime_from: fromdata,
+				order_addtime_end: enddata,
+			};
+
+			doAjax("order", "statistics", param, "post", function(rs) {
+				log(JSON.stringify(rs));
+				//return false;
+
+				api.hideProgress();
+				if (rs["code"] == 1) {
+
+
+					$api.html($api.dom('#zfb_count'), rs.data.total_alipay_count + "笔<br/><span class='dsy'>" + rs.data.total_alipay_sum +"元</span>");
+					$api.html($api.dom('#wx_count'), rs.data.total_wxpay_count + "笔<br/><span class='dsy'>" + rs.data.total_wxpay_sum +"元</span>");
+
+					$api.html($api.dom('#total_amount'), rs.data.total_amount);
+					$api.html($api.dom('#total_refund_amount'), rs.data.total_refund_amount);
+
+					$api.html($api.dom('#all_count'), rs.data.total_count);
+
+
+				} else {
+					PubApp.toast(rs.message);
+					$api.html($api.dom('#zfb_count'), "-笔");
+					$api.html($api.dom('#wx_count'), "-笔");
+
+					$api.html($api.dom('#total_amount'), "-");
+					$api.html($api.dom('#total_refund_amount'), "-");
+
+					$api.html($api.dom('#all_count'), "-");
+				}
+				api.refreshHeaderLoadDone();
+			})
+		},
+		addEvt: function() {
+			api.addEventListener({
+				name: 'userloginorout'
+			}, function(ret, err) {
+				if (ret) {
+					thisApp.requestData();
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+
+
+			//点击了遮罩层
+			mui("body").on("tap", ".mui-backdrop", function() {
+				api.setFrameAttr({
+					name: api.frameName,
+					bounces: true
+				});
+			});
+
+			//点击了取消
+			mui("body").on("tap", ".mui-dtpicker-header .mui-btn", function() {
+				api.setFrameAttr({
+					name: api.frameName,
+					bounces: true
+				});
+			});
+
+			api.addEventListener({
+				name: 'neworder'
+			}, function(ret, err) {
+				if (ret) {
+					fromdata = getLocalTime(Date.parse(new Date()) / 1000, "Y-m-d");//更新结束日期问今天的;防止应用程序跨天运行
+					enddata = fromdata;
+					thisApp.requestData();
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+
+		},
+		fixdata: function(dataOne) {
+
+			log(JSON.stringify(dataOne));
+
+			//$api.append(document.querySelector("#listwarp"), lists_html);
+
+
+			api.hideProgress();
+			api.parseTapmode();
+
+		}
+	}
+</script>
+
+</html>

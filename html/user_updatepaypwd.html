@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<style>
+		.area {
+			margin: 20px auto 0px auto;
+		}
+
+		.mui-input-group {
+			margin-top: 10px;
+		}
+
+		.mui-input-group:first-child {
+			margin-top: 20px;
+		}
+
+		.mui-input-group label {
+			width: 22%;
+		}
+
+		.mui-input-row label~input,
+		.mui-input-row label~select,
+		.mui-input-row label~textarea {
+			width: 78%;
+		}
+
+		.mui-checkbox input[type=checkbox],
+		.mui-radio input[type=radio] {
+			top: 6px;
+		}
+
+		.mui-content-padded {
+			margin-top: 25px;
+		}
+
+		.mui-btn {
+			padding: 10px;
+		}
+
+		.link-area {
+			display: block;
+			margin-top: 25px;
+			text-align: center;
+		}
+
+		.spliter {
+			color: #bbb;
+			padding: 0px 8px;
+		}
+
+		.oauth-area {
+			position: absolute;
+			bottom: 20px;
+			left: 0px;
+			text-align: center;
+			width: 100%;
+			padding: 0px;
+			margin: 0px;
+		}
+
+		.oauth-area .oauth-btn {
+			display: inline-block;
+			width: 50px;
+			height: 50px;
+			background-size: 30px 30px;
+			background-position: center center;
+			background-repeat: no-repeat;
+			margin: 0px 20px;
+			/*-webkit-filter: grayscale(100%); */
+			border: solid 1px #ddd;
+			border-radius: 25px;
+		}
+
+		.oauth-area .oauth-btn:active {
+			border: solid 1px #aaa;
+		}
+
+		.oauth-area .oauth-btn.disabled {
+			background-color: #ddd;
+		}
+
+		.mui-input-group .mui-input-row {
+			height: 60px;
+			padding-top: 10px;
+		}
+
+		.mui-input-row .mui-input-clear~.mui-icon-clear,
+		.mui-input-row .mui-input-password~.mui-icon-eye,
+		.mui-input-row .mui-input-speech~.mui-icon-speech {
+			top: 20px;
+		}
+
+		.mui-input-group label {
+			min-width: 25%;
+		}
+
+		.mui-input-row label~input,
+		.mui-input-row label~select,
+		.mui-input-row label~textarea {
+			width: 75%;
+		}
+	</style>
+</head>
+
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-icon mui-icon-back mui-pull-left"></a>
+		<h1 class="mui-title">修改退款密码</h1>
+	</header>
+	<div class="mui-content">
+		<form id='login-form' class="mui-input-group">
+			<div class="mui-input-row">
+				<label>原密码</label>
+				<input id='password1' type="password" value="" class="mui-input-clear mui-input" placeholder="请输入密码">
+			</div>
+			<div class="mui-input-row">
+				<label>新密码</label>
+				<input id='password2' type="password" value="" class="mui-input-clear mui-input" placeholder="请输入密码">
+			</div>
+			<div class="mui-input-row">
+				<label>新密码</label>
+				<input id='password3' type="password" value="" class="mui-input-clear mui-input" placeholder="请输入密码">
+			</div>
+		</form>
+		<!--<form class="mui-input-group">
+				<ul class="mui-table-view mui-table-view-chevron">
+					<li class="mui-table-view-cell">
+						自动登录
+						<div id="autoLogin" class="mui-switch">
+							<div class="mui-switch-handle"></div>
+						</div>
+					</li>
+				</ul>
+			</form>-->
+		<div class="mui-content-padded">
+			<button onclick="thisApp.submit()" tapmode="tapmode" class="mui-btn mui-btn-block mui-btn-primary">修改</button>
+			<!--<div class="link-area"><a id='reg'>注册账号</a> <span class="spliter">|</span> <a id='forgetPassword'>忘记密码</a>
+				</div>-->
+		</div>
+		<div class="mui-content-padded oauth-area">
+
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+		init: function() {
+
+			//下拉刷新
+			/*api.setRefreshHeaderInfo({
+			    visible: true,
+			    loadingImg: 'widget://image/refresh.png',
+			    bgColor: '#fff',
+			    textColor: '#ccc',
+			    textDown: '下拉刷新...',
+			    textUp: '松开刷新...',
+			    showTime: true
+			}, function(ret, err) {
+			    thisApp.requestData("new");
+			});*/
+			//__下拉刷新
+
+		},
+		submit: function() {
+			var password1 = document.querySelector("#password1").value;
+			var password2 = document.querySelector("#password2").value;
+			var password3 = document.querySelector("#password3").value;
+			if (!password1) {
+				PubApp.toast("输入原密码");
+				return false;
+			}
+
+			if (!password2) {
+				PubApp.toast("输入新密码");
+				return false;
+			}
+
+			if (password2 != password3) {
+				PubApp.toast("二次密码不一致");
+				return false;
+			}
+
+			api.showProgress({
+				style: 'default',
+				animationType: 'fade',
+				title: '修改中...',
+				text: '先稍等...',
+				modal: false
+			});
+
+
+			var param = {
+				"user_id": db2.getVal("user_id"),
+				"oldpassword": password1,
+				"newpassword": password2,
+			};
+
+
+			doAjax("user", "updatepaypassword", param, "post", function(rs) {
+				api.hideProgress();
+				if (rs.code == 1) {
+					PubApp.toast("修改成功");
+					PubApp.closeWin(300);
+				} else {
+					PubApp.toast(rs.message);
+				}
+				log(JSON.stringify(rs));
+			})
+
+
+		},
+		addEvt: function() {
+			PubApp.setCloseBtn();
+
+		},
+		fixdata: function(dataOne) {
+
+
+
+
+			api.hideProgress();
+			api.parseTapmode();
+
+		}
+	}
+</script>
+
+</html>

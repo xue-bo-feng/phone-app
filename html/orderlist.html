@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+	<link rel="stylesheet" href="../css/mui_picker_min.css" />
+	<style>
+		.reportwarp {
+			padding: 7px;
+			height: 100%;
+		}
+	</style>
+</head>
+
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-icon mui-icon-arrowdown mui-pull-right" tapmode id="btn_changestate" onclick="thisApp.changestate();" style="font-size:14px;padding-top:15px;">有效订单</a>
+		<a class="mui-icon mui-icon-arrowdown mui-pull-left" tapmode id="btn_changechannel" onclick="thisApp.changechannel();" style="font-size:14px;padding-top:15px;">支付通道</a>
+		<h1 class="mui-title">最近订单</h1>
+	</header>
+	<div class="mui-content">
+		<div class="reportwarp">
+			<div class="mui-row">
+				<div class="mui-col-sm-6">
+					<span>日期</span>：
+					<a tapmode="" style="font-size:16px;" onclick="thisApp.changedata('fromdata');" id="fromdata"></a>&nbsp;&nbsp;-&nbsp;&nbsp;
+				</div>
+				<div class="mui-col-sm-6">
+					<a tapmode="" style="font-size:16px;" onclick="thisApp.changedata('enddata');" id="enddata"></a>
+				</div>
+			</div>
+		</div>
+		<div class="mui-table-view mui-control-content mui-active" id="listwarp">
+			<p>加载中</p>
+		</div>
+	</div>
+
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" src="../script/mui_picker_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	var fromdata = getLocalTime((Date.parse(new Date()) / 1000) - (3600 * 24 * 2), "Y-m-d");
+	var enddata = getLocalTime(Date.parse(new Date()) / 1000, "Y-m-d");
+	var picker;
+	var channel = "";
+
+	var page = 1,
+		order_status = "ordertrue";
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+		init: function() {
+			thisApp.datachangend(fromdata,enddata);
+			picker = new mui.DtPicker({
+				"type": "date"
+			});
+
+			api.setRefreshHeaderInfo({
+				visible: true,
+				loadingImg: 'widget://image/refresh.png',
+				bgColor: '#fff',
+				textColor: '#ccc',
+				textDown: '下拉刷新...',
+				textUp: '松开刷新...',
+				showTime: true
+			}, function(ret, err) {
+				page = 1;
+				thisApp.requestData();
+			});
+
+			thisApp.requestData();
+		},
+		changedata: function(labels) {
+
+
+			api.setFrameAttr({
+				name: api.frameName,
+				bounces: false
+			});
+
+
+			picker.show(function(rs) {
+				/*
+				 * rs.value 拼合后的 value
+				 * rs.text 拼合后的 text
+				 * rs.y 年，可以通过 rs.y.vaue 和 rs.y.text 获取值和文本
+				 * rs.m 月，用法同年
+				 * rs.d 日，用法同年
+				 * rs.h 时，用法同年
+				 * rs.i 分（minutes 的第二个字母），用法同年
+				 */
+				if (labels == "fromdata") {
+					fromdata = rs.text;
+					thisApp.datachangend(fromdata,"");
+				} else {
+					thisApp.datachangend("",enddata);
+					enddata = rs.text;
+				}
+
+				thisApp.requestData();
+				api.setFrameAttr({
+					name: api.frameName,
+					bounces: true
+				});
+				//alert(rs.text);
+				/*
+				 * 返回 false 可以阻止选择框的关闭
+				 * return false;
+				 */
+				/*
+				 * 释放组件资源，释放后将将不能再操作组件
+				 * 通常情况下，不需要示放组件，new DtPicker(options) 后，可以一直使用。
+				 * 当前示例，因为内容较多，如不进行资原释放，在某些设备上会较慢。
+				 * 所以每次用完便立即调用 dispose 进行释放，下次用时再创建新实例。
+				 */
+				//picker.dispose();
+			});
+		},
+		requestData: function(paytype) {
+
+
+			if (isLogin() == false) {
+				document.querySelector("#listwarp").innerHTML = "";
+				api.refreshHeaderLoadDone();
+				return;
+			}
+
+
+			var param = {
+				user_id: db2.getVal("user_id"),
+				order_status: order_status,
+				store_id: "",
+				page: page,
+				per_page: 20,
+				order_addtime_from: fromdata,
+				order_addtime_end: enddata,
+				channel: channel
+			};
+			doAjax("order", "list", param, "post", function(rs) {
+				window.ajaxsuccess = 1;
+				api.hideProgress();
+				if (rs["code"] == 1) {
+					thisApp.fixdata(rs["data"]);
+				} else {
+					api.toast({
+						msg: rs["message"]
+					});
+				}
+				api.refreshHeaderLoadDone();
+			})
+		},
+		changestate: function() {
+			api.actionSheet({
+				title: '支付状态',
+				buttons: ['全部订单', '有效订单', '退款订单', '无效订单']
+			}, function(ret, err) {
+				if (ret) {
+					thisselectstatus
+					var thisselectstatus = order_status;//默认是上一次的
+					switch (ret.buttonIndex) {
+						case 1: //全部
+							thisselectstatus = "";
+							break;
+						case 2: //有效订单（支付中，支付成功，有部分退款）
+							thisselectstatus = "ordertrue";
+							break;
+						case 3: //
+							thisselectstatus = "fundorder";
+							break;
+						case 4: //
+							thisselectstatus = "orderfailed";
+							break;
+						default:
+
+					}
+					if (order_status != thisselectstatus) {
+						thisApp.order_status_changeend(thisselectstatus);
+						api.refreshHeaderLoading();
+					}
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+
+		},
+		order_status_changeend:function(thisselectstatus){
+			  order_status = thisselectstatus;
+				var statusname="";
+				switch (thisselectstatus) {
+					case "":
+						statusname='全部状态';
+						break;
+					case "ordertrue":
+						statusname='有效订单';
+						break;
+					case "fundorder":
+						statusname='退款订单';
+						break;
+					case "orderfailed":
+						statusname='无效订单';
+						break;
+					default:
+						statusname='全部状态';
+
+				}
+				if(statusname!="")$api.html($api.dom('#btn_changestate'), statusname);
+		},
+
+		changechannel: function() {
+			api.actionSheet({
+				title: '支付通道',
+				buttons: ['全部通道', '支付宝支付', '微信支付']
+			}, function(ret, err) {
+				if (ret) {
+					var thisselectchannel = null;
+					switch (ret.buttonIndex) {
+						case 1: //全部
+							thisselectchannel = "";
+							break;
+						case 2: //支付宝
+							thisselectchannel = "alipay";
+							break;
+						case 3: //
+							thisselectchannel = "wxpay";
+							break;
+						default:
+					}
+					if (channel != thisselectchannel&&thisselectchannel!=null) {
+						thisApp.channel_changeend(thisselectchannel);
+						api.refreshHeaderLoading();
+					}
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+
+		},
+		channel_changeend:function(thischannel){
+			channel = thischannel;
+			var channelname="";
+			switch (thischannel) {
+				case "":
+					channelname='全部通道';
+					break;
+				case "alipay":
+					channelname='支付宝支付';
+					break;
+				case "wxpay":
+					channelname='微信支付';
+					break;
+				default:
+			}
+			$api.html($api.dom('#btn_changechannel'), channelname);
+		},
+		datachangend:function(thisfromdata,thisenddata){
+				if((thisfromdata||"")!=""){
+					fromdata = thisfromdata;
+					$api.html($api.dom('#fromdata'), thisfromdata);
+				}
+				if((thisenddata||"")!=""){
+					enddata = thisenddata;
+					$api.html($api.dom('#enddata'), thisenddata);
+				}
+		},
+		addEvt: function() {
+
+			api.addEventListener({
+				name: 'scrolltobottom',
+				extra: {
+					threshold: 100 //设置距离底部多少距离时触发，默认值为0，数字类型
+				}
+			}, function(ret, err) {
+				page++;
+				thisApp.requestData();
+			});
+
+			api.addEventListener({
+				name: 'go2orderlistpage'
+			}, function(ret, err) {
+				if (ret) {
+					log(JSON.stringify(ret));
+					thisApp.channel_changeend(ret.value.channel);
+					thisApp.datachangend(ret.value.order_addtime_from,ret.value.order_addtime_end);
+					thisApp.order_status_changeend(ret.value.status);
+					api.refreshHeaderLoading();
+				} else {
+					log(JSON.stringify(err));
+				}
+			});
+
+			//点击了遮罩层
+			mui("body").on("tap", ".mui-backdrop", function() {
+				api.setFrameAttr({
+					name: api.frameName,
+					bounces: true
+				});
+			});
+
+			//点击了取消
+			mui("body").on("tap", ".mui-dtpicker-header .mui-btn", function() {
+				api.setFrameAttr({
+					name: api.frameName,
+					bounces: true
+				});
+			});
+
+			api.addEventListener({
+				name: 'userloginorout'
+			}, function(ret, err) {
+				if (ret) {
+					page = 1;
+					thisApp.requestData();
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+
+
+			api.addEventListener({
+				name: 'neworder'
+			}, function(ret, err) {
+				if (ret) {
+					fromdata = getLocalTime((Date.parse(new Date()) / 1000) - (3600 * 24 * 2), "Y-m-d");
+					enddata = getLocalTime(Date.parse(new Date()) / 1000, "Y-m-d");
+					api.refreshHeaderLoading();
+				} else {
+					alert(JSON.stringify(err));
+				}
+			});
+
+
+			mui("#listwarp,#listwarp2").on("click", ".itemone", function() {
+
+				openWin("orderdetail", "order_num=" + $api.attr(this, 'order_num'));
+
+			})
+		},
+		nicedate: function(datestring) {
+
+		},
+		fixdata: function(dataOne) {
+			//log(JSON.stringify(dataOne));
+			var lists = dataOne.data;
+			var lists_html = "";
+			if (lists) {
+
+				lists.forEach(function(thisobj) {
+					lists_html += '<li class="mui-table-view-cell mui-media itemone" order_num="' + thisobj.order_num + '" >';
+					lists_html += '		<a href="javascript:;">';
+					lists_html += '				<img style="margin-top:8px;" class="mui-media-object mui-pull-left" src="../images/' + (thisobj.order_channel.indexOf("alipay") <= 0 ? 'wx' : 'zfb') + '.jpg">';
+					lists_html += '				<div class="mui-media-body">';
+					lists_html += '						<p class="mui-ellipsis" style="font-size:12px;color:#ccc;">' + thisobj.order_num + '&nbsp;' + thisobj.order_channel_info + '</p>';
+					lists_html += '						￥' + thisobj.order_total_amount + '  <span style="color:' + (thisobj.order_status != 100 ? 'red' : '') + '; font-size:12px;">' + thisobj.order_status_info + '</span>';
+					lists_html += '						<p class="mui-ellipsis">' + (thisobj.order_addtime) + '</p>';
+					lists_html += '				</div>';
+					lists_html += '		</a>';
+					lists_html += '</li>';
+				});
+
+			} else {
+				lists_html = "";
+			}
+			if (page <= 1) document.querySelector("#listwarp").innerHTML = "";
+			$api.append(document.querySelector("#listwarp"), lists_html);
+
+			api.hideProgress();
+			api.parseTapmode();
+		}
+	}
+
+	mui.init({
+		gestureConfig: {
+			tap: true, //默认为true
+			longtap: true, //默认为false
+		}
+	});
+</script>
+
+</html>

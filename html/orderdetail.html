@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta content="telephone=no" name="format-detection" />
+	<meta content="email=no" name="format-detection" />
+	<title></title>
+	<link rel="stylesheet" href="../fonts/iconfont.css" />
+	<link href="../css/mui_min.css" rel="stylesheet" />
+	<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+	<header class="mui-bar mui-bar-nav">
+		<a class="mui-icon mui-icon-back mui-pull-left"></a>
+		<h1 class="mui-title">订单详情</h1>
+	</header>
+	<div class="mui-content">
+		<div class="mui-content-padded">
+			<div id="box_content">
+				<ul class="mui-table-view">
+					<li class="mui-table-view-cell">订单金额
+						<span class="mui-pull-right">￥0</span>
+					</li>
+					<li class="mui-table-view-cell">实付金额
+						<span class="mui-pull-right">￥0</span>
+					</li>
+					<li class="mui-table-view-cell">订单号
+						<h5 class="mui-pull-right">0</h5>
+					</li>
+					<li class="mui-table-view-cell">订单状态
+						<h5 class="mui-pull-right">0</h5>
+					</li>
+					<li class="mui-table-view-cell">创建时间
+						<h5 class="mui-pull-right">#</h5>
+					</li>
+					<li class="mui-table-view-cell">支付时间
+						<h5 class="mui-pull-right">#</h5>
+					</li>
+					<li class="mui-table-view-cell">支付通道
+						<h5 class="mui-pull-right">#</h5>
+					</li>
+					<li class="mui-table-view-cell">店铺名称
+						<h5 class="mui-pull-right">#</h5>
+					</li>
+					<li class="mui-table-view-cell">收银员
+						<h5 class="mui-pull-right">#</h5>
+					</li>
+				</ul>
+			</div>
+			<br />
+			<button type="button" id="btn_refund" tapmode onclick="thisApp.dorefund()" class="mui-btn mui-btn-warning hide">退款</button>&nbsp;&nbsp;
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="../script/db.js"></script>
+<script type="text/javascript" src="../script/mui_min.js"></script>
+<script type="text/javascript" charset="UTF-8">
+	var order_num, printhtml, order_pay_realprice = 0;
+	apiready = function() {
+		thisApp.init();
+		thisApp.addEvt();
+	}
+	var thisApp = {
+
+		init: function() {
+			order_num = api.pageParam.order_num;
+			setTimeout(function() {
+				thisApp.requestData();
+			}, 350);
+		},
+
+		dorefund: function() {
+			order_pay_realprice = parseFloat(order_pay_realprice);
+			api.prompt({
+				title: "输入退款金额,当前可退¥" + order_pay_realprice,
+				type: "number",
+				buttons: ['确定', '取消']
+			}, function(ret1, err) {
+				if (ret1) {
+					if (ret1.buttonIndex == 1) {
+						if (!isNaN(ret1.text)) {
+							var refund_fee = ret1.text;
+							if (refund_fee > order_pay_realprice) {
+								api.alert({
+									title: '错误',
+									msg: '可退款金额不足',
+								}, function(ret, err) {});
+							} else {
+								api.prompt({
+									title: "输入退款密码",
+									type: "password",
+									buttons: ['确定', '取消']
+								}, function(ret, err) {
+									if (ret.buttonIndex == 1) {
+										var refund_pwd = ret.text;
+										api.showProgress({
+											style: 'default',
+											animationType: 'fade',
+											title: '退款中',
+											text: '稍等',
+											modal: false
+										});
+										var param = {
+											user_id: db2.getVal("user_id"),
+											order_num: order_num,
+											refund_fee: refund_fee,
+											password: refund_pwd
+										};
+										doAjax("pay", "dorefundrequest", param, "post", function(rs) {
+											api.hideProgress();
+											if (rs["code"] == 1) {
+												api.alert({
+													title: '提示',
+													msg: '退款成功¥' + rs.data.refund_fee,
+												}, function(ret, err) {
+													if (ret) {
+														api.sendEvent({
+															name: 'neworder',
+															extra: {
+																key1: 'value1',
+																key2: 'value2'
+															}
+														});
+														thisApp.requestData();
+													}
+												});
+											} else {
+												api.alert({
+													title: '提示',
+													msg: rs["message"],
+												}, function(ret, err) {
+													if (ret) {
+															console.log("ret==========" + JSON.stringify(ret));
+													} else {
+															console.log("ret==========" + JSON.stringify(ret));
+													}
+												});
+											}
+											api.refreshHeaderLoadDone();
+										})
+									}
+								});
+							}
+						} else {
+							api.alert({
+								title: '错误',
+								msg: '退款金额必需是数字',
+							}, function(ret, err) {});
+
+						}
+					}
+				} else {}
+			});
+
+		},
+		requestData: function() {
+			api.showProgress({
+				style: 'default',
+				animationType: 'fade',
+				title: '努力加载中...',
+				text: '稍等...',
+				modal: false
+			});
+
+			var param = {
+				user_id: db2.getVal("user_id"),
+				order_num: order_num,
+				return_printhtml: 1
+			};
+
+
+			doAjax("order", "detail", param, "post", function(rs) {
+				api.hideProgress();
+				if (rs.code == 1) {
+
+					order_pay_realprice = rs.data.order_pay_realprice;
+
+					var htmlcode = "";
+					htmlcode += '<ul class="mui-table-view">';
+					htmlcode += '	<li class="mui-table-view-cell">订单金额';
+					htmlcode += '		<span class="mui-pull-right">￥' + rs.data.order_total_amount + '</span>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">实付金额';
+					htmlcode += '		<span class="mui-pull-right">￥' + rs.data.order_pay_realprice + '</span>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">订单号';
+					htmlcode += '		<h5 class="mui-pull-right">' + rs.data.order_num + '</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">订单状态';
+					htmlcode += '		<h5 class="mui-pull-right">' + rs.data.order_status_info + '</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">创建时间';
+					htmlcode += '		<h5 class="mui-pull-right">' + rs.data.order_addtime + '</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">支付时间';
+					htmlcode += '		<h5 class="mui-pull-right">' + rs.data.order_pay_time + '</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">支付通道';
+					htmlcode += '		<h5 class="mui-pull-right"><img style="width:16px;height:16px;" class="mui-media-object mui-pull-left" src="../images/' + (rs.data.order_channel.indexOf("alipay") <= 0 ? 'wx' : 'zfb') + '.jpg">' + rs.data.order_channel_info +
+						'</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">店铺名称';
+					htmlcode += '		<h5 class="mui-pull-right">' + rs.data.store_name + '</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '	<li class="mui-table-view-cell">收银员';
+					htmlcode += '		<h5 class="mui-pull-right">' + rs.data.user_name + '</h5>';
+					htmlcode += '	</li>';
+					htmlcode += '</ul>';
+
+					if (rs.data.refund_list) {
+						htmlcode += '<ul class="mui-table-view">';
+						rs.data.refund_list.forEach(function(obj) {
+							htmlcode += '	<li class="mui-table-view-cell">';
+							htmlcode += '		<h5 class="mui-pull-right" style="color:red;">' + obj.refund_time + ' 退款¥' + obj.refund_amount + '</h5>';
+							htmlcode += '	</li>';
+						});
+						htmlcode += '</ul>';
+					}
+
+					printhtml = rs.data.printhtml;
+
+					if (rs.data.order_status == 101 || rs.data.order_status == 100) {
+						$api.removeCls($api.dom("#btn_refund"), 'hide');
+					} else {
+						$api.addCls($api.dom("#btn_refund"), 'hide');
+					}
+
+					document.querySelector("#box_content").innerHTML = htmlcode;
+				} else {
+					api.alert({
+						title: '错误',
+						msg: rs.message,
+					}, function(ret, err) {
+						PubApp.closeWin(100);
+					});
+				}
+			});
+		},
+		addEvt: function() {
+			PubApp.setCloseBtn();
+
+
+
+			/*
+			PubApp.setRightBtn(function() {
+			    openWin("user_car_edit");
+			});
+			*/
+		},
+		fixdata: function(dataOne) {
+
+
+
+
+			api.hideProgress();
+			api.parseTapmode();
+
+		}
+	}
+</script>
+
+</html>
